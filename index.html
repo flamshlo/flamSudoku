@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>flamSudoku</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+
+    .flam-grid {
+      display: grid;
+      grid-template-columns: repeat(10, auto);
+      grid-template-rows: repeat(10, auto);
+    }
+
+    .header {
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 60px;
+      width: 60px;
+      background-color: #ddd;
+    }
+
+    .cell {
+      border: 1px solid #999;
+      width: 60px;
+      height: 60px;
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 0;
+      gap: 0;
+    }
+
+    .cell input {
+      width: 100%;
+      height: 100%;
+      font-size: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    /* Thicker borders for 3x3 regions in the big grid */
+    .thick-left {
+      border-left: 3px solid black !important;
+    }
+    .thick-top {
+      border-top: 3px solid black !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>flamSudoku</h1>
+  <div class="flam-grid">
+    <!-- Top-left empty corner -->
+    <div></div>
+
+    <!-- Column Headers -->
+    <!-- Columns 1 to 9 -->
+    <script>
+      for (let c = 1; c <= 9; c++) {
+        document.write('<div class="header">' + c + '</div>');
+      }
+
+      // Row loop
+      for (let r = 1; r <= 9; r++) {
+        document.write('<div class="header">' + r + '</div>'); // Row header
+        for (let c = 1; c <= 9; c++) {
+          const topClass = (r - 1) % 3 === 0 ? 'thick-top' : '';
+          const leftClass = (c - 1) % 3 === 0 ? 'thick-left' : '';
+          let cellHTML = '<div class="cell ' + topClass + ' ' + leftClass + '">';
+          for (let i = 1; i <= 9; i++) {
+            cellHTML += '<input type="text" maxlength="1" value="' + i + '" />';
+          }
+          cellHTML += '</div>';
+          document.write(cellHTML);
+        }
+      }
+    </script>
+  </div>
+</body>
+</html>
