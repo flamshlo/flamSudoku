@@ -13,7 +13,8 @@
 
     .flam-grid {
       display: grid;
-      grid-template-columns: repeat(10, auto);
+      /* Define 10 columns: first for row headers, next 9 for content */
+      grid-template-columns: auto repeat(9, auto);
       grid-template-rows: repeat(10, auto);
     }
 
@@ -60,17 +61,15 @@
 <body>
   <h1>flamSudoku</h1>
   <div class="flam-grid">
-    <!-- Top-left empty corner -->
     <div></div>
 
-    <!-- Column Headers -->
-    <!-- Columns 1 to 9 -->
     <script>
+      // Column Headers (1 to 9)
       for (let c = 1; c <= 9; c++) {
         document.write('<div class="header">' + c + '</div>');
       }
 
-      // Row loop
+      // Main grid rows and cells
       for (let r = 1; r <= 9; r++) {
         document.write('<div class="header">' + r + '</div>'); // Row header
         for (let c = 1; c <= 9; c++) {
