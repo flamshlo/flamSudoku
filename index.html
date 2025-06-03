@@ -4,18 +4,84 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>flamSudoku</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Inter', sans-serif;
       padding: 20px;
       background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 2.5rem;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .button-container button {
+      padding: 12px 25px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease-in-out;
+      display: flex; /* For icon and text alignment */
+      align-items: center;
+      justify-content: center;
+      gap: 8px; /* Space between icon and text */
+    }
+
+    .button-container button:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .button-container button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 660px; /* Aligns with the grid width (11 * 60px) */
+      height: 100px; /* Adjusted height for 3 lines */
+      margin-bottom: 25px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      resize: vertical;
+      box-sizing: border-box;
     }
 
     .flam-grid {
       display: grid;
-      /* Define 10 columns: first for row headers, next 9 for content */
-      grid-template-columns: auto repeat(9, auto);
-      grid-template-rows: repeat(10, auto);
+      /* Columns: 1 auto (header), 9 * 60px (main cells), 1 * 60px (Rows summary) */
+      grid-template-columns: auto repeat(9, 60px) 60px;
+      /* Rows: 1 auto (header), 9 * 60px (main rows), 1 * 60px (Cols summary) */
+      grid-template-rows: auto repeat(9, 60px) 60px;
+      border: 3px solid black;
+      border-radius: 8px;
+      overflow: hidden;
     }
 
     .header {
@@ -26,6 +92,9 @@
       height: 60px;
       width: 60px;
       background-color: #ddd;
+      border: 1px solid #999;
+      box-sizing: border-box;
+      font-size: 1.2rem;
     }
 
     .cell {
@@ -38,6 +107,8 @@
       grid-template-rows: repeat(3, 1fr);
       padding: 0;
       gap: 0;
+      box-sizing: border-box;
+      background-color: #fff;
     }
 
     .cell input {
@@ -47,6 +118,10 @@
       border: 1px solid #ccc;
       text-align: center;
       box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      outline: none;
+      background-color: #fff; /* Default white background */
     }
 
     /* Thicker borders for 3x3 regions in the big grid */
@@ -56,34 +131,673 @@
     .thick-top {
       border-top: 3px solid black !important;
     }
+
+    /* Adjust specific borders for the overall grid structure */
+    /* Remove top border from column headers */
+    .flam-grid > div:nth-child(n+2):nth-child(-n+11).header {
+        border-top: none;
+    }
+    /* Remove left border from row headers */
+    .flam-grid > div:nth-child(11n+1).header {
+        border-left: none;
+    }
+
+    .flam-grid .header.rows-header {
+        border-left: 3px solid black !important;
+    }
+
+    .flam-grid .header.cols-header {
+        border-top: 3px solid black !important;
+    }
+
+    /* New styles for possible/chosen digits in main grid */
+    .possible-digit {
+        background-color: #e6ffe6 !important; /* Very light green */
+        font-weight: normal !important;
+    }
+
+    .optionally-chosen {
+        background-color: #ffc0cb !important; /* Pink */
+        font-weight: normal !important;
+    }
+
+    .definitely-chosen {
+        background-color: #228b22 !important; /* Dark green */
+        color: white; /* White text for dark green background */
+        font-weight: bold !important;
+    }
+
+    .other-digit-gray {
+        background-color: #e0e0e0 !important; /* Gray */
+        font-weight: normal !important;
+    }
+
+    /* Styles for summary digits (Rows, Cols, Boxes) */
+    .summary-digit-empty {
+        background-color: #e0e0e0 !important; /* Light gray for empty summary digits */
+        font-weight: normal;
+    }
+
+    /* Styles for digit count display (bottom-right cell) */
+    .digit-count-gray {
+        background-color: #e0e0e0 !important; /* Light gray for counts < 3 */
+    }
+    .digit-count-blue {
+        background-color: #add8e6 !important; /* Light blue for counts > 7 and < 9 */
+    }
+    .digit-count-green {
+        background-color: #90ee90 !important; /* Bright green for count == 9 */
+    }
+    .digit-count-red {
+        background-color: #ffb6c1 !important; /* Light red for counts > 9 */
+    }
+
+    /* Error highlighting for summary cells (Rows, Cols, Boxes) */
+    .summary-error {
+        background-color: #ff6347 !important; /* Tomato red for errors */
+        color: white;
+    }
+
+    /* New container for Boxes grid */
+    .boxes-grid-container {
+        display: grid;
+        /* Columns: 1 auto (header), 3 * 60px (box cells) */
+        grid-template-columns: auto repeat(3, 60px);
+        /* Rows: 1 auto (header), 3 * 60px (box cells) */
+        grid-template-rows: auto repeat(3, 60px);
+        border: 3px solid black;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 30px; /* Space between main grid and boxes grid */
+    }
+
+    .boxes-grid-container .header {
+        background-color: #ddd; /* Header color for boxes */
+        border: 1px solid #999; /* Consistent border */
+    }
+    .boxes-grid-container .header.boxes-main-header {
+        grid-column: 1 / span 4; /* Span across all columns for the main "Boxes" header */
+        background-color: #bbb; /* Darker header for main boxes title */
+        font-size: 1.5rem;
+        border-bottom: 3px solid black; /* Thick border below main header */
+    }
+    .boxes-grid-container .header.box-col-header {
+        border-top: none; /* No top border for column headers */
+    }
+    .boxes-grid-container .header.box-row-header {
+        border-left: none; /* No left border for row headers */
+    }
   </style>
 </head>
 <body>
   <h1>flamSudoku</h1>
-  <div class="flam-grid">
-    <div></div>
 
-    <script>
-      // Column Headers (1 to 9)
-      for (let c = 1; c <= 9; c++) {
-        document.write('<div class="header">' + c + '</div>');
-      }
-
-      // Main grid rows and cells
-      for (let r = 1; r <= 9; r++) {
-        document.write('<div class="header">' + r + '</div>'); // Row header
-        for (let c = 1; c <= 9; c++) {
-          const topClass = (r - 1) % 3 === 0 ? 'thick-top' : '';
-          const leftClass = (c - 1) % 3 === 0 ? 'thick-left' : '';
-          let cellHTML = '<div class="cell ' + topClass + ' ' + leftClass + '">';
-          for (let i = 1; i <= 9; i++) {
-            cellHTML += '<input type="text" maxlength="1" value="' + i + '" />';
-          }
-          cellHTML += '</div>';
-          document.write(cellHTML);
-        }
-      }
-    </script>
+  <div class="button-container">
+    <button id="newSetButton"><i class="fas fa-plus"></i> NEW</button>
+    <button id="restartButton"><i class="fas fa-redo-alt"></i> RESTART</button>
+    <button id="undoButton"><i class="fas fa-undo"></i> UNDO</button>
+    <button id="redoButton"><i class="fas fa-redo"></i> REDO</button>
+    <button id="calcButton"><i class="fas fa-calculator"></i> CALC</button>
   </div>
+
+  <textarea id="chosenDigitsOutput" rows="3" readonly></textarea>
+
+  <div class="flam-grid" id="mainFlamGrid">
+    </div>
+
+  <div class="boxes-grid-container" id="boxesGridContainer">
+    </div>
+
+  <script>
+    const mainFlamGrid = document.getElementById('mainFlamGrid');
+    const newSetButton = document.getElementById('newSetButton');
+    const restartButton = document.getElementById('restartButton');
+    const undoButton = document.getElementById('undoButton');
+    const redoButton = document.getElementById('redoButton');
+    const calcButton = document.getElementById('calcButton');
+    const chosenDigitsOutput = document.getElementById('chosenDigitsOutput');
+    const boxesGridContainer = document.getElementById('boxesGridContainer');
+
+    // State constants for inner cell inputs
+    const STATE_NOT_CHOSEN = 0; // Gray / Possible (depending on context)
+    const STATE_OPTIONALLY_CHOSEN = 1; // Pink
+    const STATE_DEFINITELY_CHOSEN = 2; // Dark Green
+
+    let isSettingMode = false;
+    // gridState: 3D array [row][col][digitIndex (0-8 for 1-9)] storing state (0, 1, or 2)
+    let gridState = Array(9).fill(0).map(() => Array(9).fill(0).map(() => Array(9).fill(STATE_NOT_CHOSEN)));
+    // initialGridState: Stores the fixed clues after SET is pressed. Same structure as gridState.
+    let initialGridState = JSON.parse(JSON.stringify(gridState));
+
+    let undoStack = []; // Stores copies of gridState
+    let redoStack = []; // Stores copies of gridState
+
+    /**
+     * Pushes the current gridState onto the undo stack.
+     */
+    function saveStateForUndo() {
+        undoStack.push(JSON.parse(JSON.stringify(gridState)));
+        redoStack = []; // Clear redo stack on new action
+        // Limit stack size to prevent excessive memory usage
+        if (undoStack.length > 50) {
+            undoStack.shift(); // Remove oldest state
+        }
+    }
+
+    /**
+     * Restores a state from the undo stack.
+     */
+    function undo() {
+        if (undoStack.length > 0) {
+            redoStack.push(JSON.parse(JSON.stringify(gridState))); // Save current state to redo
+            gridState = undoStack.pop(); // Restore previous state
+            renderAllGrids(); // Re-render the UI
+        }
+    }
+
+    /**
+     * Restores a state from the redo stack.
+     */
+    function redo() {
+        if (redoStack.length > 0) {
+            undoStack.push(JSON.parse(JSON.stringify(gridState))); // Save current state to undo
+            gridState = redoStack.pop(); // Restore next state
+            renderAllGrids(); // Re-render the UI
+        }
+    }
+
+
+    /**
+     * Creates a DocumentFragment containing 9 input elements for a 3x3 inner grid.
+     * @param {boolean} isMainCell - True if this is for a main Sudoku grid cell, false for summary cells.
+     * @returns {DocumentFragment} A fragment containing the 9 input elements.
+     */
+    function createInnerGrid(isMainCell = false) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 1; i <= 9; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = '1';
+        input.readOnly = !isMainCell; // Main cells are editable, summary cells are not
+        input.dataset.originalValue = i; // Store original value (1-9)
+
+        if (!isMainCell) {
+            input.classList.add('summary-digit-empty'); // Initial light gray for summary cells
+            input.value = i; // Summary cells display 1-9 initially
+        }
+        fragment.appendChild(input);
+      }
+      return fragment;
+    }
+
+    /**
+     * Updates the styling and values of the 3x3 inner grid within a main Sudoku cell.
+     * @param {HTMLElement} cellElement - The parent .cell element.
+     * @param {Array<number>} cellStateArray - An array of 9 states (0, 1, or 2) for the inner inputs.
+     * @param {boolean} isFixedClue - True if this cell is an initial fixed clue.
+     */
+    function updateMainCellStyling(cellElement, cellStateArray, isFixedClue = false) {
+      const inputs = cellElement.querySelectorAll('input');
+      inputs.forEach((input, index) => {
+        const digit = index + 1;
+        input.classList.remove('possible-digit', 'optionally-chosen', 'definitely-chosen', 'other-digit-gray');
+        input.readOnly = isFixedClue; // Set readOnly based on fixed clue status
+
+        if (isFixedClue) {
+            // For fixed clues, only the chosen digit is dark green, others are gray
+            if (cellStateArray[index] === STATE_DEFINITELY_CHOSEN) {
+                input.classList.add('definitely-chosen');
+                input.value = digit;
+            } else {
+                input.classList.add('other-digit-gray');
+                input.value = '';
+            }
+        } else {
+            // For editable cells, apply states based on cellStateArray
+            if (cellStateArray[index] === STATE_DEFINITELY_CHOSEN) {
+                input.classList.add('definitely-chosen');
+                input.value = digit;
+            } else if (cellStateArray[index] === STATE_OPTIONALLY_CHOSEN) {
+                input.classList.add('optionally-chosen');
+                input.value = digit;
+            } else { // STATE_NOT_CHOSEN
+                // If any digit is definitely chosen in this cell, others are gray.
+                // Otherwise, all are possible.
+                const hasDefinitelyChosen = cellStateArray.some(state => state === STATE_DEFINITELY_CHOSEN);
+                if (hasDefinitelyChosen) {
+                    input.classList.add('other-digit-gray');
+                    input.value = '';
+                } else {
+                    input.classList.add('possible-digit');
+                    input.value = digit;
+                }
+            }
+        }
+      });
+    }
+
+    /**
+     * Updates the textarea output with the current grid state in the specified format.
+     */
+    function updateChosenDigitsOutput() {
+      let outputLines = [];
+      for (let blockRow = 0; blockRow < 3; blockRow++) { // Iterate through 3 blocks of rows (0-2, 3-5, 6-8)
+        let currentLineParts = [];
+        for (let r = 0; r < 3; r++) { // Iterate through 3 rows within the current block
+          const actualRow = blockRow * 3 + r;
+          let rowDigits = '';
+          for (let c = 0; c < 9; c++) {
+            // Find the definitely chosen digit for this cell, or 0 if none
+            let chosenDigit = 0;
+            for (let i = 0; i < 9; i++) {
+                if (gridState[actualRow][c][i] === STATE_DEFINITELY_CHOSEN) {
+                    chosenDigit = i + 1;
+                    break;
+                }
+            }
+            rowDigits += String(chosenDigit);
+          }
+          // Format each row's digits into "XXX XXX XXX"
+          currentLineParts.push(`${rowDigits.substring(0,3)} ${rowDigits.substring(3,6)} ${rowDigits.substring(6,9)}`);
+        }
+        // Join the three row parts with ". "
+        let line = currentLineParts.join('. ');
+        // Add semicolon for first two lines, period for the last
+        line += (blockRow < 2 ? ';' : '.');
+        outputLines.push(line);
+      }
+      chosenDigitsOutput.value = outputLines.join('\n');
+    }
+
+    /**
+     * Calculates the count of each definitely chosen digit in the main grid.
+     * @returns {Array<number>} An array where index `d` stores the count of digit `d`.
+     */
+    function getDefinitelyChosenDigitCounts() {
+        const counts = Array(10).fill(0); // Index 0 unused, 1-9 for digits
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                for (let i = 0; i < 9; i++) {
+                    if (gridState[r][c][i] === STATE_DEFINITELY_CHOSEN) {
+                        counts[i + 1]++;
+                        break; // Only one definitely chosen digit per cell
+                    }
+                }
+            }
+        }
+        return counts;
+    }
+
+    /**
+     * Updates the styling and values of the digit count summary cell based on digit occurrences.
+     */
+    function updateDigitCounts() {
+        const counts = getDefinitelyChosenDigitCounts();
+        const digitCountCell = document.getElementById('digitCountSummaryCell');
+        if (!digitCountCell) return;
+
+        const inputs = digitCountCell.querySelectorAll('input');
+        inputs.forEach((input, index) => {
+            const digit = index + 1; // Input represents this digit
+            const count = counts[digit];
+
+            // Remove all existing styling classes
+            input.classList.remove('summary-digit-empty', 'digit-count-gray', 'digit-count-blue', 'digit-count-green', 'digit-count-red');
+
+            input.value = digit; // Always show the digit in the count cell
+
+            if (count === 0) {
+                input.classList.add('summary-digit-empty'); // Light gray if not chosen at all
+            } else if (count < 3) {
+                input.classList.add('digit-count-gray'); // Gray if chosen less than 3 times (1 or 2)
+            } else if (count > 7 && count < 9) {
+                input.classList.add('digit-count-blue'); // Blue if chosen more than 7 (8)
+            } else if (count === 9) {
+                input.classList.add('digit-count-green'); // Green if all 9 chosen
+            } else if (count > 9) {
+                input.classList.add('digit-count-red'); // Red if too many chosen (error)
+            }
+        });
+    }
+
+    /**
+     * Checks for duplicate definitely chosen digits in a given array of digits.
+     * @param {Array<number>} digits - An array of digits (0-9) to check.
+     * @returns {Set<number>} A set of digits that appear more than once.
+     */
+    function findDuplicates(digits) {
+        const seen = new Set();
+        const duplicates = new Set();
+        digits.forEach(digit => {
+            if (digit !== 0) { // Only check chosen digits
+                if (seen.has(digit)) {
+                    duplicates.add(digit);
+                } else {
+                    seen.add(digit);
+                }
+            }
+        });
+        return duplicates;
+    }
+
+    /**
+     * Updates the Rows, Cols, and Boxes summary cells based on digits present in their respective regions.
+     * Also applies error highlighting for duplicates.
+     */
+    function updateRowColBoxSummaries() {
+        // Update Rows column cells
+        for (let r = 0; r < 9; r++) {
+            const rowChosenDigits = []; // Only definitely chosen digits
+            for (let c = 0; c < 9; c++) {
+                for (let i = 0; i < 9; i++) {
+                    if (gridState[r][c][i] === STATE_DEFINITELY_CHOSEN) {
+                        rowChosenDigits.push(i + 1);
+                        break;
+                    }
+                }
+            }
+            const rowDuplicates = findDuplicates(rowChosenDigits);
+            const rowsSummaryCellInputs = document.querySelector(`.cell[data-row="${r}"][data-type="rows-summary"]`).querySelectorAll('input');
+            rowsSummaryCellInputs.forEach((input, index) => {
+                const digit = index + 1;
+                input.classList.remove('summary-digit-empty', 'chosen-digit', 'summary-error');
+                if (rowChosenDigits.includes(digit)) {
+                    if (rowDuplicates.has(digit)) {
+                        input.classList.add('summary-error'); // Red for duplicate
+                    } else {
+                        input.classList.add('chosen-digit'); // Bright green if present and unique
+                    }
+                    input.value = digit;
+                } else {
+                    input.classList.add('summary-digit-empty'); // Light gray if not present
+                    input.value = digit; // Display the digit even if not chosen
+                }
+            });
+        }
+
+        // Update Cols row cells
+        for (let c = 0; c < 9; c++) {
+            const colChosenDigits = [];
+            for (let r = 0; r < 9; r++) {
+                for (let i = 0; i < 9; i++) {
+                    if (gridState[r][c][i] === STATE_DEFINITELY_CHOSEN) {
+                        colChosenDigits.push(i + 1);
+                        break;
+                    }
+                }
+            }
+            const colDuplicates = findDuplicates(colChosenDigits);
+            const colsSummaryCellInputs = document.querySelector(`.cell[data-col="${c}"][data-type="cols-summary"]`).querySelectorAll('input');
+            colsSummaryCellInputs.forEach((input, index) => {
+                const digit = index + 1;
+                input.classList.remove('summary-digit-empty', 'chosen-digit', 'summary-error');
+                if (colChosenDigits.includes(digit)) {
+                    if (colDuplicates.has(digit)) {
+                        input.classList.add('summary-error');
+                    } else {
+                        input.classList.add('chosen-digit');
+                    }
+                    input.value = digit;
+                } else {
+                    input.classList.add('summary-digit-empty');
+                    input.value = digit;
+                }
+            });
+        }
+
+        // Update Box summary cells
+        for (let boxIndex = 1; boxIndex <= 9; boxIndex++) {
+            const boxChosenDigits = new Set();
+            // Determine rows and columns for this box
+            const startRow = Math.floor((boxIndex - 1) / 3) * 3;
+            const startCol = ((boxIndex - 1) % 3) * 3;
+
+            const currentBoxDigits = [];
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    for (let i = 0; i < 9; i++) {
+                        if (gridState[r][c][i] === STATE_DEFINITELY_CHOSEN) {
+                            currentBoxDigits.push(i + 1);
+                            break;
+                        }
+                    }
+                }
+            }
+            const boxDuplicates = findDuplicates(currentBoxDigits);
+
+            const boxSummaryCellInputs = document.querySelector(`.cell[data-box="${boxIndex}"]`).querySelectorAll('input');
+            boxSummaryCellInputs.forEach((input, index) => {
+                const digit = index + 1;
+                input.classList.remove('summary-digit-empty', 'chosen-digit', 'summary-error');
+                if (currentBoxDigits.includes(digit)) {
+                    if (boxDuplicates.has(digit)) {
+                        input.classList.add('summary-error');
+                    } else {
+                        input.classList.add('chosen-digit');
+                    }
+                    input.value = digit;
+                } else {
+                    input.classList.add('summary-digit-empty');
+                    input.value = digit;
+                }
+            });
+        }
+    }
+
+
+    /**
+     * Builds the main flamSudoku grid structure dynamically using DOM manipulation.
+     */
+    function buildMainGridStructure() {
+      mainFlamGrid.innerHTML = ''; // Clear existing content
+
+      // Row 1: Top-left empty, Column Headers, Rows Header
+      let cell = document.createElement('div'); // Top-left empty corner
+      mainFlamGrid.appendChild(cell);
+      for (let c = 1; c <= 9; c++) {
+        cell = document.createElement('div');
+        cell.classList.add('header');
+        cell.textContent = c;
+        mainFlamGrid.appendChild(cell);
+      }
+      cell = document.createElement('div'); // Rows column header
+      cell.classList.add('header', 'rows-header');
+      cell.textContent = 'Rows'; // Renamed to Rows
+      mainFlamGrid.appendChild(cell);
+
+      // Rows 2-10: Row Headers, Main 9x9 Cells, Rows Column Summary Cells
+      for (let r = 0; r < 9; r++) {
+        cell = document.createElement('div'); // Row Header
+        cell.classList.add('header');
+        cell.textContent = r + 1;
+        mainFlamGrid.appendChild(cell);
+
+        for (let c = 0; c < 9; c++) { // Main 9x9 Cells
+          cell = document.createElement('div');
+          cell.classList.add('cell', 'main-grid-cell');
+          // Apply thick borders for 3x3 blocks
+          if (r % 3 === 0 && r !== 0) cell.classList.add('thick-top');
+          if (c % 3 === 0 && c !== 0) cell.classList.add('thick-left');
+          cell.dataset.row = r; // Store row index
+          cell.dataset.col = c; // Store column index
+          cell.appendChild(createInnerGrid(true)); // Create inner 3x3 grid for main cells
+          mainFlamGrid.appendChild(cell);
+        }
+
+        cell = document.createElement('div'); // Rows Column Summary Cell
+        cell.classList.add('cell', 'thick-left');
+        if (r % 3 === 0 && r !== 0) cell.classList.add('thick-top');
+        cell.dataset.row = r; // Store row index for summary
+        cell.dataset.type = 'rows-summary'; // Identify as Rows summary cell
+        cell.appendChild(createInnerGrid(false)); // Create empty inner 3x3 grid for summary
+        mainFlamGrid.appendChild(cell);
+      }
+
+      // Row 11: Cols Header, Cols Cells, Digit Count Cell
+      cell = document.createElement('div'); // Cols row header
+      cell.classList.add('header', 'cols-header');
+      cell.textContent = 'Cols'; // Renamed to Cols
+      mainFlamGrid.appendChild(cell);
+      for (let c = 0; c < 9; c++) { // Cols row summary cells
+        cell = document.createElement('div');
+        cell.classList.add('cell', 'thick-top');
+        if (c % 3 === 0 && c !== 0) cell.classList.add('thick-left');
+        cell.dataset.col = c; // Store column index for summary
+        cell.dataset.type = 'cols-summary'; // Identify as Cols summary cell
+        cell.appendChild(createInnerGrid(false)); // Create empty inner 3x3 grid for summary
+        mainFlamGrid.appendChild(cell);
+      }
+      const digitCountCell = document.createElement('div'); // Digit Count Summary Cell (bottom-right)
+      digitCountCell.id = 'digitCountSummaryCell'; // Add ID for easy access
+      digitCountCell.classList.add('cell', 'thick-top', 'thick-left');
+      digitCountCell.appendChild(createInnerGrid(false)); // Create empty inner 3x3 grid for counts
+      mainFlamGrid.appendChild(digitCountCell);
+    }
+
+    /**
+     * Builds the separate Boxes grid structure dynamically.
+     */
+    function buildBoxesGridStructure() {
+        boxesGridContainer.innerHTML = ''; // Clear existing content
+
+        // Main "Boxes" header (spans all columns)
+        let headerCell = document.createElement('div');
+        headerCell.classList.add('header', 'boxes-main-header');
+        headerCell.textContent = 'Boxes';
+        boxesGridContainer.appendChild(headerCell);
+
+        // Top-left empty corner for box headers
+        boxesGridContainer.appendChild(document.createElement('div'));
+
+        // Box Column Headers (1, 2, 3)
+        for (let c = 1; c <= 3; c++) {
+            headerCell = document.createElement('div');
+            headerCell.classList.add('header', 'box-col-header');
+            headerCell.textContent = c;
+            boxesGridContainer.appendChild(headerCell);
+        }
+
+        // Box Rows (1, 2, 3) and Box Cells
+        for (let r = 1; r <= 3; r++) {
+            headerCell = document.createElement('div'); // Box Row Header
+            headerCell.classList.add('header', 'box-row-header');
+            headerCell.textContent = r;
+            boxesGridContainer.appendChild(headerCell);
+
+            for (let c = 1; c <= 3; c++) { // Box Cells
+                const boxIndex = (r - 1) * 3 + c;
+                const cell = document.createElement('div');
+                cell.classList.add('cell', 'box-cell');
+                cell.dataset.box = boxIndex; // Store box index
+                cell.appendChild(createInnerGrid(false)); // Create empty inner 3x3 grid for summary
+                boxesGridContainer.appendChild(cell);
+            }
+        }
+    }
+
+    /**
+     * Renders all grids (main, rows, cols, boxes, digit counts) based on the current gridState.
+     */
+    function renderAllGrids() {
+        const mainCells = mainFlamGrid.querySelectorAll('.main-grid-cell');
+        mainCells.forEach(cell => {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            // Determine if this cell is a fixed clue from initialGridState
+            const isFixedClue = initialGridState[row][col].some(state => state === STATE_DEFINITELY_CHOSEN);
+            updateMainCellStyling(cell, gridState[row][col], isFixedClue);
+        });
+        updateChosenDigitsOutput();
+        updateDigitCounts();
+        updateRowColBoxSummaries();
+    }
+
+
+    // Event listener for the main grid (using event delegation)
+    mainFlamGrid.addEventListener('click', (event) => {
+      if (event.target.tagName === 'INPUT') {
+        const inputElement = event.target;
+        const cellElement = inputElement.closest('.main-grid-cell');
+
+        if (!cellElement) return; // Not a main grid cell input
+
+        const row = parseInt(cellElement.dataset.row);
+        const col = parseInt(cellElement.dataset.col);
+        const digitIndex = parseInt(inputElement.dataset.originalValue) - 1; // 0-8 index for digit 1-9
+
+        // Check if this cell is a fixed clue
+        const isFixedClue = initialGridState[row][col].some(state => state === STATE_DEFINITELY_CHOSEN);
+        if (isFixedClue) {
+            // If it's a fixed clue, prevent any interaction
+            return;
+        }
+
+        saveStateForUndo(); // Save state before making changes
+
+        if (isSettingMode) {
+            // SET Mode Logic: Toggle definite choice for the cell
+            if (gridState[row][col][digitIndex] === STATE_DEFINITELY_CHOSEN) {
+                // If already definitely chosen, unset it (make all possible)
+                gridState[row][col] = Array(9).fill(STATE_NOT_CHOSEN);
+            } else {
+                // Set this digit as definitely chosen, unset others
+                gridState[row][col] = Array(9).fill(STATE_NOT_CHOSEN);
+                gridState[row][col][digitIndex] = STATE_DEFINITELY_CHOSEN;
+            }
+        } else {
+            // PLAY Mode Logic: Cycle through Possible -> Optionally -> Definitely -> Possible
+            const currentState = gridState[row][col][digitIndex];
+
+            if (currentState === STATE_NOT_CHOSEN) {
+                // From Not Chosen to Optionally Chosen (pink)
+                gridState[row][col][digitIndex] = STATE_OPTIONALLY_CHOSEN;
+            } else if (currentState === STATE_OPTIONALLY_CHOSEN) {
+                // From Optionally Chosen to Definitely Chosen (dark green)
+                // When definitely chosen, all others in the cell become not chosen
+                gridState[row][col] = Array(9).fill(STATE_NOT_CHOSEN);
+                gridState[row][col][digitIndex] = STATE_DEFINITELY_CHOSEN;
+            } else if (currentState === STATE_DEFINITELY_CHOSEN) {
+                // From Definitely Chosen back to Not Chosen (all possible)
+                gridState[row][col] = Array(9).fill(STATE_NOT_CHOSEN);
+            }
+        }
+        renderAllGrids(); // Re-render the UI after state change
+      }
+    });
+
+    // Event listener for NEW/SET button
+    newSetButton.addEventListener('click', () => {
+      isSettingMode = !isSettingMode;
+      if (isSettingMode) {
+        newSetButton.innerHTML = '<i class="fas fa-check"></i> SET'; // Change icon and text
+        // When entering SET mode, clear gridState and initialGridState
+        gridState = Array(9).fill(0).map(() => Array(9).fill(0).map(() => Array(9).fill(STATE_NOT_CHOSEN)));
+        initialGridState = JSON.parse(JSON.stringify(gridState)); // Reset initial state too
+      } else {
+        newSetButton.innerHTML = '<i class="fas fa-plus"></i> NEW'; // Change icon and text
+        // When SET is pressed, the current gridState becomes the initial fixed clues
+        initialGridState = JSON.parse(JSON.stringify(gridState));
+      }
+      renderAllGrids(); // Re-render the UI
+      saveStateForUndo(); // Save state after NEW/SET action
+    });
+
+    // Event listener for RESTART button
+    restartButton.addEventListener('click', () => {
+        gridState = JSON.parse(JSON.stringify(initialGridState)); // Restore from initial state
+        renderAllGrids(); // Re-render the UI
+        saveStateForUndo(); // Save state after RESTART action
+    });
+
+    // Event listeners for Undo/Redo buttons
+    undoButton.addEventListener('click', undo);
+    redoButton.addEventListener('click', redo);
+    // Calc button functionality will be added later
+
+    // Initial setup calls
+    buildMainGridStructure();
+    buildBoxesGridStructure(); // Build the separate boxes grid
+    renderAllGrids(); // Initial render
+  </script>
 </body>
 </html>
