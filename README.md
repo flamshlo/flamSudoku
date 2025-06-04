@@ -2,7 +2,7 @@
 
 Gemini according to specs 
 
-flamSudoku is an interactive web-based Sudoku game that allows users to set up their own puzzles and then play them. It features a unique 9x9 grid where each cell contains a smaller 3x3 grid for detailed candidate tracking. The application provides real-time feedback on game progress, including error highlighting and summary views of rows, columns, and 3x3 boxes.
+flamSudoku is an interactive web-based Sudoku game that allows users to set up their own puzzles and then play them. It features a unique 9x9 grid where each cell contains a smaller 3x3 grid for detailed candidate tracking. The application provides real-time feedback on game progress, including error highlighting and summary views of rows, columns, 3x3 boxes and digits usage.
 
 ## Features
 
